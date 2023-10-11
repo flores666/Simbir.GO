@@ -1,10 +1,9 @@
-﻿using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Simbir.GO.Models;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace Simbir.GO.Controllers;
 
+[Produces("application/json")]
 public class AccountController : Controller
 {
     private readonly ILogger<AccountController> _logger;
@@ -23,21 +22,23 @@ public class AccountController : Controller
     /// <response code="0">Непредвиденная ошибка</response>
     [HttpGet]
     [Route("/Me")]
+    [ProducesResponseType(typeof(UserViewModel), 200)]
     public IActionResult Me()
     {
-        return new JsonResult(null);
+        return new JsonResult("jija");
     }
 
     /// <summary>
     /// получение нового jwt токена пользователя
-    /// </summary>
+    /// </summary>  
     /// <param name="body"></param>
     /// <response code="200">Пользователь успешно авторизовался</response>
     /// <response code="401">Данные не верны или отсутствуют</response>
     /// <response code="0">Непредвиденная ошибка</response>
     [HttpPost]
     [Route("/SignIn")]
-    public IActionResult SignIn()
+    [ProducesResponseType(typeof(TokenModel), 200)]
+    public IActionResult SignIn(LoginModel userLogin)
     {
         return new JsonResult(null);
     }
@@ -54,21 +55,22 @@ public class AccountController : Controller
     {
         return new JsonResult(null);
     }
-    
+
     /// <summary>
     /// регистрация нового аккаунта
     /// </summary>
     /// <param name="body"></param>
-    /// <response code="200">Пользователь успешно зарегистрировался</response>
+    /// <response code="201">Пользователь успешно зарегистрировался</response>
     /// <response code="401">Такой пользователь уже существует или данные не верны</response>
     /// <response code="0">Непредвиденная ошибка</response>
     [HttpPost]
     [Route("/SignUp")]
-    public IActionResult SignUp()
+    [ProducesResponseType(typeof(TokenModel), 201)]
+    public IActionResult SignUp(RegisterModel registerModel)
     {
         return new JsonResult(null);
     }
-    
+
     /// <summary>
     /// обновление своего аккаунта
     /// </summary>
@@ -78,7 +80,8 @@ public class AccountController : Controller
     /// <response code="0">Непредвиденная ошибка</response>
     [HttpPut]
     [Route("/Update")]
-    public IActionResult Update()
+    [ProducesResponseType(typeof(LoginModel), 200)]
+    public IActionResult Update(LoginModel userLogin)
     {
         return new JsonResult(null);
     }
