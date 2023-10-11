@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
-namespace IO.Swagger.DataAccess.Objects
+namespace Simbir.GO.DataAccess.Objects
 {
     public class User
     {
@@ -14,6 +15,9 @@ namespace IO.Swagger.DataAccess.Objects
         [Required]
         [Column(TypeName = "text")]
         public string PasswordHash { get; set; }
-        public string JWT { get; set; }
+
+        [Column(TypeName = "text")]
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpTime { get; set; }
     }
 }
