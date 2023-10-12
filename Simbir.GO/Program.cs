@@ -2,6 +2,8 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Simbir.GO.DataAccess;
+using Simbir.GO.Repositories;
+using Simbir.GO.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +24,10 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("default")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("default"))
+        .UseSnakeCaseNamingConvention());
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddEntityFrameworkNpgsql();
 
 var app = builder.Build();
 
@@ -47,6 +52,7 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
