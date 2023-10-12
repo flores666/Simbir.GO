@@ -16,8 +16,6 @@ namespace Simbir.GO.DataAccess.Objects
         [Column(TypeName = "text")]
         public string PasswordHash { get; set; }
 
-        [Column(TypeName = "text")]
-        public string? RefreshToken { get; set; }
-        public DateTime? RefreshTokenExpTime { get; set; }
+        public RefreshToken? RefreshToken { get; set; }
     }
 }

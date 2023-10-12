@@ -22,6 +22,30 @@ namespace Simbir.GO.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Simbir.GO.DataAccess.Objects.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ExpiryTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expiry_time");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tokens");
+
+                    b.ToTable("tokens", (string)null);
+                });
+
             modelBuilder.Entity("Simbir.GO.DataAccess.Objects.User", b =>
                 {
                     b.Property<int>("Id")
@@ -41,13 +65,9 @@ namespace Simbir.GO.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("text")
-                        .HasColumnName("refresh_token");
-
-                    b.Property<DateTime?>("RefreshTokenExpTime")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("refresh_token_exp_time");
+                    b.Property<int?>("RefreshTokenId")
+                        .HasColumnType("integer")
+                        .HasColumnName("refresh_token_id");
 
                     b.HasKey("Id")
                         .HasName("pk_users");
@@ -56,7 +76,20 @@ namespace Simbir.GO.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_users_name");
 
+                    b.HasIndex("RefreshTokenId")
+                        .HasDatabaseName("ix_users_refresh_token_id");
+
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Simbir.GO.DataAccess.Objects.User", b =>
+                {
+                    b.HasOne("Simbir.GO.DataAccess.Objects.RefreshToken", "RefreshToken")
+                        .WithMany()
+                        .HasForeignKey("RefreshTokenId")
+                        .HasConstraintName("fk_users_tokens_refresh_token_id");
+
+                    b.Navigation("RefreshToken");
                 });
 #pragma warning restore 612, 618
         }
