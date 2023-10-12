@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Simbir.GO.Models;
+using Simbir.GO.Repositories.Interfaces;
 
 namespace Simbir.GO.Controllers;
 
@@ -7,10 +8,12 @@ namespace Simbir.GO.Controllers;
 public class AccountController : Controller
 {
     private readonly ILogger<AccountController> _logger;
+    private readonly IUserService _userService;
 
-    public AccountController(ILogger<AccountController> logger)
+    public AccountController(ILogger<AccountController> logger, IUserService userService)
     {
         _logger = logger;
+        _userService = userService;
     }
 
     /// <summary>
@@ -61,14 +64,18 @@ public class AccountController : Controller
     /// </summary>
     /// <param name="body"></param>
     /// <response code="201">Пользователь успешно зарегистрировался</response>
-    /// <response code="401">Такой пользователь уже существует или данные не верны</response>
-    /// <response code="0">Непредвиденная ошибка</response>
+    /// <response code="403">Такой пользователь уже существует </response>
+    /// <response code="400">С данными что-то не так</response>
+    /// <response code="500">Непредвиденная ошибка</response>
     [HttpPost]
     [Route("/SignUp")]
-    [ProducesResponseType(typeof(TokenModel), 201)]
     public IActionResult SignUp(RegisterModel registerModel)
     {
-        return new JsonResult(null);
+        if (!ModelState.IsValid) return StatusCode(400);
+        if (_userService.Get(registerModel.Name) != null) return Forbid();
+        _userService.Create(registerModel.Name, registerModel.Password);
+
+        return Ok();
     }
 
     /// <summary>
