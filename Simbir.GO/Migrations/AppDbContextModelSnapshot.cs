@@ -24,23 +24,15 @@ namespace Simbir.GO.Migrations
 
             modelBuilder.Entity("Simbir.GO.DataAccess.Objects.RefreshToken", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<string>("Token")
+                        .HasColumnType("text")
+                        .HasColumnName("token");
 
                     b.Property<DateTime>("ExpiryTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expiry_time");
 
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token");
-
-                    b.HasKey("Id")
+                    b.HasKey("Token")
                         .HasName("pk_tokens");
 
                     b.ToTable("tokens", (string)null);
@@ -48,15 +40,7 @@ namespace Simbir.GO.Migrations
 
             modelBuilder.Entity("Simbir.GO.DataAccess.Objects.User", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("varchar(25)")
                         .HasColumnName("name");
 
@@ -65,19 +49,15 @@ namespace Simbir.GO.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
-                    b.Property<int?>("RefreshTokenId")
-                        .HasColumnType("integer")
-                        .HasColumnName("refresh_token_id");
+                    b.Property<string>("RefreshTokenToken")
+                        .HasColumnType("text")
+                        .HasColumnName("refresh_token_token");
 
-                    b.HasKey("Id")
+                    b.HasKey("Name")
                         .HasName("pk_users");
 
-                    b.HasIndex("Name")
-                        .IsUnique()
-                        .HasDatabaseName("ix_users_name");
-
-                    b.HasIndex("RefreshTokenId")
-                        .HasDatabaseName("ix_users_refresh_token_id");
+                    b.HasIndex("RefreshTokenToken")
+                        .HasDatabaseName("ix_users_refresh_token_token");
 
                     b.ToTable("users", (string)null);
                 });
@@ -86,8 +66,8 @@ namespace Simbir.GO.Migrations
                 {
                     b.HasOne("Simbir.GO.DataAccess.Objects.RefreshToken", "RefreshToken")
                         .WithMany()
-                        .HasForeignKey("RefreshTokenId")
-                        .HasConstraintName("fk_users_tokens_refresh_token_id");
+                        .HasForeignKey("RefreshTokenToken")
+                        .HasConstraintName("fk_users_tokens_refresh_token_token");
 
                     b.Navigation("RefreshToken");
                 });

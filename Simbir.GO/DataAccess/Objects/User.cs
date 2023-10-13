@@ -6,8 +6,7 @@ namespace Simbir.GO.DataAccess.Objects
 {
     public class User
     {
-        public int Id { get; set; }
-        
+        [Key]
         [Required]
         [Column(TypeName = "varchar(25)")]
         public string Name { get; set; }

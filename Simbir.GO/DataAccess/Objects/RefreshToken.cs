@@ -1,14 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Simbir.GO.DataAccess.Objects;
 
 public class RefreshToken
 {
-    public int Id { get; set; }
-    
+    [Key]
+    [Required]
     [Column(TypeName = "text")]
     public string Token { get; set; }
     
+    [Required]
     public DateTime ExpiryTime { get; set; }
     
     public bool IsExpired => DateTime.UtcNow >= ExpiryTime;
