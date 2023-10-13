@@ -54,7 +54,7 @@ public class UserService : IUserService
         if (!PasswordHasher.Validate(model.Password, user.PasswordHash))
             return new Response(StatusCodes.Status400BadRequest, "Данные не верны или отсутствуют");
 
-        var jwtToken = GenerateJwtToken(model.Name);
+        var jwtToken = GenerateJwt(model.Name);
         var refreshToken = GenerateRefreshToken();
 
         if (!string.IsNullOrEmpty(user.RefreshToken?.Token)) _db.Tokens.Remove(user.RefreshToken);
@@ -73,7 +73,7 @@ public class UserService : IUserService
         return new Response(StatusCodes.Status200OK, tokenModel);
     }
 
-    private string GenerateJwtToken(string userName)
+    private string GenerateJwt(string userName)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
@@ -81,11 +81,13 @@ public class UserService : IUserService
         {
             Subject = new ClaimsIdentity(new Claim[]
             {
-                new Claim(ClaimTypes.Name, userName)
+                new Claim(ClaimTypes.Name, userName),
             }),
-            Expires = DateTime.UtcNow.AddMinutes(15),
+            Expires = DateTime.UtcNow.AddMinutes(1),
             SigningCredentials =
-                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            Issuer = _configuration["Jwt:Issuer"],
+            Audience = _configuration["Jwt:Audience"]
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
@@ -93,10 +95,10 @@ public class UserService : IUserService
 
     private RefreshToken GenerateRefreshToken()
     {
-        using (var rngCryptoServiceProvider = new RNGCryptoServiceProvider())
+        using (var serviceProvider = new RNGCryptoServiceProvider())
         {
             var randomBytes = new byte[64];
-            rngCryptoServiceProvider.GetBytes(randomBytes);
+            serviceProvider.GetBytes(randomBytes);
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(randomBytes),

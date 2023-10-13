@@ -24,6 +24,31 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Simbir.GO API (ASP.NET 7.0)"
     });
     
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter JSON Web Token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+    
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+    
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
@@ -54,7 +79,6 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
     {
-        //options.SwaggerEndpoint("/swagger-original.json", "Simbir.GO API");
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Simbir.GO API");
         options.RoutePrefix = string.Empty;
     }

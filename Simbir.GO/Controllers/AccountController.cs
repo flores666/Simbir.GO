@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Simbir.GO.Models;
 using Simbir.GO.Repositories.Interfaces;
 
@@ -23,7 +25,7 @@ public class AccountController : Controller
     /// <response code="401">Пользователь не авторизорван</response>
     /// <response code="404">Пользователь не найден</response>
     /// <response code="0">Непредвиденная ошибка</response>
-    [HttpGet]
+    [HttpGet, Authorize]
     [Route("/Me")]
     [ProducesResponseType(typeof(UserViewModel), 200)]
     public IActionResult Me()
@@ -52,9 +54,9 @@ public class AccountController : Controller
     /// выход из аккаунта
     /// </summary>
     /// <response code="200">Пользователь успешно вышел из аккаунта</response>
-    /// <response code="403">Пользователь не авторизован</response>
+    /// <response code="401">Пользователь не авторизован</response>
     /// <response code="0">Непредвиденная ошибка</response>
-    [HttpPost]
+    [HttpPost, Authorize]
     [Route("/SignOut")]
     public IActionResult SignOut()
     {
@@ -84,9 +86,9 @@ public class AccountController : Controller
     /// </summary>
     /// <param name="body"></param>
     /// <response code="200">Данные успешно обновлены</response>
-    /// <response code="403">Пользователь не авторизован</response>
+    /// <response code="401">Пользователь не авторизован</response>
     /// <response code="0">Непредвиденная ошибка</response>
-    [HttpPut]
+    [HttpPut, Authorize]
     [Route("/Update")]
     [ProducesResponseType(typeof(LoginModel), 200)]
     public IActionResult Update(LoginModel userLogin)
