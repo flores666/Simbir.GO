@@ -37,13 +37,15 @@ public class AccountController : Controller
     /// <param name="body"></param>
     /// <response code="200">Пользователь успешно авторизовался</response>
     /// <response code="401">Данные не верны или отсутствуют</response>
+    /// <response code="404">Пользователь не найден</response>
     /// <response code="0">Непредвиденная ошибка</response>
     [HttpPost]
     [Route("/SignIn")]
     [ProducesResponseType(typeof(TokenModel), 200)]
     public IActionResult SignIn(LoginModel userLogin)
     {
-        return new JsonResult(null);
+        var response = _userService.Authenticate(userLogin);
+        return StatusCode(response.StatusCode, response.Result);
     }
 
     /// <summary>
@@ -63,19 +65,18 @@ public class AccountController : Controller
     /// регистрация нового аккаунта
     /// </summary>
     /// <param name="body"></param>
-    /// <response code="201">Пользователь успешно зарегистрировался</response>
+    /// <response code="200">Пользователь успешно зарегистрировался</response>
     /// <response code="403">Такой пользователь уже существует </response>
-    /// <response code="400">С данными что-то не так</response>
+    /// <response code="400">Данные некорректны</response>
     /// <response code="500">Непредвиденная ошибка</response>
     [HttpPost]
     [Route("/SignUp")]
     public IActionResult SignUp(RegisterModel registerModel)
     {
-        if (!ModelState.IsValid) return StatusCode(400);
-        if (_userService.Get(registerModel.Name) != null) return Forbid();
+        if (!ModelState.IsValid) return StatusCode(400, "Данные некорректны");
         _userService.Create(registerModel.Name, registerModel.Password);
 
-        return Ok();
+        return Ok("Пользователь успешно зарегистрировался");
     }
 
     /// <summary>
