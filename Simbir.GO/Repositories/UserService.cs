@@ -24,12 +24,14 @@ public class UserService : IUserService
         _configuration = config;
     }
 
-    public void Create(string name, string password)
+    public Response Register(string name, string password)
     {
+        if (Get(name) != null) return new Response(StatusCodes.Status409Conflict, "Такой пользователь уже существует");
         var passwordHash = PasswordHasher.Hash(password);
-        var user = new User() { Name = name, PasswordHash = passwordHash };
+        var user = new User { Name = name, PasswordHash = passwordHash };
         _db.Users.Add(user);
         _db.SaveChanges();
+        return new Response(StatusCodes.Status201Created, "Пользователь успешно зарегистрировался");
     }
     
     public User Get(string name)
@@ -73,6 +75,17 @@ public class UserService : IUserService
         return new Response(StatusCodes.Status200OK, tokenModel);
     }
 
+    public Response Logout(string name)
+    {
+        var user = _db.Users.Include(u => u.RefreshToken).FirstOrDefault(u => u.Name == name);
+        if (user == null) return new Response(StatusCodes.Status404NotFound, "Пользователь не найден");
+        if (user.RefreshToken == null) return new Response(StatusCodes.Status400BadRequest, "Некорректный запрос");
+        _db.Tokens.Remove(user.RefreshToken);
+        _db.SaveChanges();
+
+        return new Response(StatusCodes.Status200OK, "Пользователь успешно деавторизовался");
+    }
+
     private string GenerateJwt(string userName)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -83,7 +96,7 @@ public class UserService : IUserService
             {
                 new Claim(ClaimTypes.Name, userName),
             }),
-            Expires = DateTime.UtcNow.AddMinutes(1),
+            Expires = DateTime.UtcNow.AddMinutes(15),
             SigningCredentials =
                 new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
             Issuer = _configuration["Jwt:Issuer"],
