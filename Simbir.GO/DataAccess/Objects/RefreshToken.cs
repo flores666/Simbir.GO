@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace Simbir.GO.DataAccess.Objects;
 
+[Owned]
 public class RefreshToken
 {
     [Key]

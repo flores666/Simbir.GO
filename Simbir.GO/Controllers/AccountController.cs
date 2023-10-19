@@ -1,10 +1,11 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simbir.GO.Models;
-using Simbir.GO.Repositories.Interfaces;
+using Simbir.GO.Services.Interfaces;
 
 namespace Simbir.GO.Controllers;
 
@@ -13,11 +14,17 @@ public class AccountController : Controller
 {
     private readonly ILogger<AccountController> _logger;
     private readonly IUserService _userService;
+    private readonly ITokenService _tokenService;
+    private readonly IConfiguration _configuration;
 
-    public AccountController(ILogger<AccountController> logger, IUserService userService)
+    public AccountController(ILogger<AccountController> logger,
+        IUserService userService, ITokenService tokenService,
+        IConfiguration configuration)
     {
         _logger = logger;
         _userService = userService;
+        _tokenService = tokenService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -27,7 +34,8 @@ public class AccountController : Controller
     /// <response code="401">Пользователь не авторизорван</response>
     /// <response code="404">Пользователь не найден</response>
     /// <response code="500">Непредвиденная ошибка</response>
-    [HttpGet, Authorize]
+    [HttpGet]
+    [Authorize]
     [Route("/Me")]
     [ProducesResponseType(typeof(UserViewModel), 200)]
     public IActionResult Me()
@@ -61,6 +69,7 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return StatusCode(StatusCodes.Status400BadRequest, "Некорректный запрос");
         var response = _userService.Authenticate(userLogin);
+        if (response.StatusCode == StatusCodes.Status200OK) SetRefreshTokenCookie((response.Result as TokenModel).RefreshToken);
         return StatusCode(response.StatusCode, response.Result);
     }
 
@@ -78,8 +87,8 @@ public class AccountController : Controller
             return Unauthorized("Пользователь не авторизован");
         var name = identity.Claims.FirstOrDefault(i => i.Type == ClaimTypes.Name).Value;
         if (name == null) return BadRequest();
-        
         var response = _userService.Logout(name);
+        if (response.StatusCode == StatusCodes.Status200OK) HttpContext.Response.Cookies.Delete("refreshToken");
         return StatusCode(response.StatusCode, response.Result);
     }
 
@@ -96,7 +105,7 @@ public class AccountController : Controller
     public IActionResult SignUp(RegisterModel registerModel)
     {
         if (!ModelState.IsValid) return StatusCode(StatusCodes.Status400BadRequest, "Введенные данные некорректны");
-        var response = _userService.Register(registerModel.Name, registerModel.Password);
+        var response = _userService.Register(registerModel);
         return StatusCode(response.StatusCode, response.Result);
     }
 
@@ -112,5 +121,36 @@ public class AccountController : Controller
     public IActionResult Update(UserViewModel user)
     {
         return BadRequest();
+    }
+    
+    /// <summary>
+    /// обновление устаревшего JWT
+    /// </summary>
+    /// <param name="body"></param>
+    /// <response code="200">Токен успешно обновлен</response>
+    /// <response code="401">Пользователь не авторизован</response>
+    /// <response code="403">Токен еще не истек</response>
+    /// <response code="500">Непредвиденная ошибка</response>
+    [HttpPost]
+    [Route("/RefreshToken")]
+    [ProducesResponseType(typeof(TokenModel), 200)]
+    public IActionResult RefreshToken()
+    {
+        if (HttpContext.User.Claims.FirstOrDefault() != null) return StatusCode(StatusCodes.Status403Forbidden, "Токен еще не истек");
+        var jwt = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+        if (jwt == null) return Unauthorized("Пользователь не авторизован");
+        var response = _tokenService.RefreshJwt(jwt);
+        if (response.StatusCode == StatusCodes.Status200OK) SetRefreshTokenCookie((response.Result as TokenModel).RefreshToken);
+        return StatusCode(response.StatusCode, response.Result);
+    }
+    
+    private void SetRefreshTokenCookie(string token)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Expires = DateTime.UtcNow.AddDays(double.Parse(_configuration["RefreshToken:LifetimeDays"]))
+        };
+        Response.Cookies.Append("refreshToken", token, cookieOptions);
     }
 }

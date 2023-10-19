@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Simbir.GO.DataAccess.Objects;
+﻿using Simbir.GO.DataAccess.Objects;
 using Simbir.GO.Models;
 
-namespace Simbir.GO.Repositories.Interfaces;
+namespace Simbir.GO.Services.Interfaces;
 
 public interface IUserService
 {
-    public Response Register(string name, string password);
+    public Response Register(RegisterModel model);
     public User Get(string name);
     public void Update(User user);
     public bool Delete(int id);
